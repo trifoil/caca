@@ -26,3 +26,13 @@ si commun (general), tt le monde a acces en lecture mais l'utilisateur ne peut p
 premier sprint review : jeudi matin 11h
 
 ad-server-07
+
+
+* Nom du serveur :
+* Nom du domaine :
+* Nom de la forêt :
+* Nom du site dans lequel ce DC se trouve :
+* Configuration IPv4 :
+  * IPv4/Mask :
+  * Passerelle :
+  * DNS :
