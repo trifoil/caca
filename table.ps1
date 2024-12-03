@@ -44,14 +44,14 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $newRow
 }
 
+# Append a new column named "test" and copy the contents of the "departement" column into it
+$sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={$_.departement}}
+
 # Remove characters after the "/" character, including the "/" itself, from the "departement" column
 $sheetDataLower = $sheetDataLower | ForEach-Object {
     $_.departement = $_.departement -replace '/.*', ''
     $_
 }
-
-# Append a new column named "test" and copy the contents of the "departement" column into it
-$sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={$_.departement}}
 
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
