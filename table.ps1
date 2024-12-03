@@ -33,14 +33,11 @@ $sheetDataLower = $sheetData | ForEach-Object {
     $_
 }
 
-# Replace the content of the 7th column with the content of the 4th column
-$sheetDataLower = $sheetDataLower | ForEach-Object {
-    $_.PSObject.Properties[6].Value = $_.PSObject.Properties[3].Value
-    $_
-}
-
 # Append a new column named "test" and fill it with "a"
 $sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={"a"}}
+
+# Replace the first line of the last column with the value of the first line, 4th column
+$sheetDataLower[0].test = $sheetDataLower[0].PSObject.Properties[3].Value
 
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
