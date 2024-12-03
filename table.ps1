@@ -4,7 +4,7 @@ Install-Module -Name ImportExcel -Scope CurrentUser
 Import-Module ImportExcel
 
 # Define the path to the input Excel file
-$inputFilePath = "C:\path\to\Employes.xlsx"
+$inputFilePath = "Employes.xlsx"
 
 # Read the "Liste3" sheet from the Excel file
 $sheetData = Import-Excel -Path $inputFilePath -WorksheetName "Liste3"
