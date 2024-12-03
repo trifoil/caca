@@ -33,11 +33,18 @@ $sheetDataLower = $sheetData | ForEach-Object {
     $_
 }
 
-# Duplicate the 4th column and name it "five"
-$sheetDataLower | ForEach-Object {
-    $_.PSObject.Properties.Add([psnoteproperty]::new('five', $_.PSObject.Properties[3].Value))
-    $_
-} | Select-Object *, five
+# Add a new column named "test" between the 4th and 5th columns
+$sheetDataLower = $sheetDataLower | ForEach-Object {
+    $row = $_
+    $newRow = New-Object PSObject
+    for ($i = 0; $i -lt $row.PSObject.Properties.Count; $i++) {
+        if ($i -eq 3) {
+            $newRow | Add-Member -MemberType NoteProperty -Name "test" -Value ""
+        }
+        $newRow | Add-Member -MemberType NoteProperty -Name $row.PSObject.Properties[$i].Name -Value $row.PSObject.Properties[$i].Value
+    }
+    $newRow
+}
 
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
