@@ -1,3 +1,6 @@
+Install-Module -Name ImportExcel -Scope CurrentUser
+
+
 # Import the required module for Excel operations
 Import-Module -Name ImportExcel
 
