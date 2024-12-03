@@ -53,6 +53,12 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $_
 }
 
+# Remove characters before the "/" character, including the "/" itself, from the "test" column
+$sheetDataLower = $sheetDataLower | ForEach-Object {
+    $_.test = $_.test -replace '^[^/]*/', ''
+    $_
+}
+
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
 
