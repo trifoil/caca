@@ -44,6 +44,17 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $newRow
 }
 
+# Change the column title "n° interne" to "interne"
+$sheetDataLower = $sheetDataLower | ForEach-Object {
+    $row = $_
+    $newRow = New-Object PSObject
+    $row.PSObject.Properties | ForEach-Object {
+        $columnName = if ($_.Name -eq "n° interne") { "interne" } else { $_.Name }
+        $newRow | Add-Member -MemberType NoteProperty -Name $columnName -Value $_.Value
+    }
+    $newRow
+}
+
 # Append a new column named "test" and copy the contents of the "departement" column into it
 $sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={$_.departement}}
 
@@ -56,6 +67,14 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
 # Remove characters before the "/" character, including the "/" itself, from the "test" column
 $sheetDataLower = $sheetDataLower | ForEach-Object {
     $_.test = $_.test -replace '^[^/]*/', ''
+    $_
+}
+
+# Remove all spaces in all cells
+$sheetDataLower = $sheetDataLower | ForEach-Object {
+    $_.PSObject.Properties | ForEach-Object {
+        $_.Value = $_.Value -replace ' ', ''
+    }
     $_
 }
 
