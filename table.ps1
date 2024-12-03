@@ -33,8 +33,11 @@ $sheetDataLower = $sheetData | ForEach-Object {
     $_
 }
 
-# Add a fifth column with a default value (e.g., "NewColumn")
-$sheetDataLower = $sheetDataLower | Select-Object *, @{Name="NewColumn";Expression={"DefaultValue"}}
+# Duplicate the 4th column and name it "five"
+$sheetDataLower | ForEach-Object {
+    $_.PSObject.Properties.Add([psnoteproperty]::new('five', $_.PSObject.Properties[3].Value))
+    $_
+} | Select-Object *, five
 
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
