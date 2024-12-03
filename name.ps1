@@ -1,5 +1,5 @@
 # Define the new server name
-$NewServerName = "MyNewServerName"
+$NewServerName = "hehe"
 
 # Get the current computer name
 $CurrentServerName = (Get-WmiObject Win32_ComputerSystem).Name
