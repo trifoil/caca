@@ -2,7 +2,7 @@
 Import-Module -Name ImportExcel
 
 # Load the Excel file
-$excelFilePath = "path_to_your_Employes.xlsx" # Replace with the path to your file
+$excelFilePath = "Employes.xlsx" # Replace with the path to your file
 $data = Import-Excel -Path $excelFilePath
 
 # Convert all columns to lowercase and remove leading/trailing spaces
