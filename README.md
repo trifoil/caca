@@ -1,5 +1,9 @@
 # winserv
 
+```
+Set-ExecutionPolicy Unrestricted
+```
+
 
 initialduprenom.nom
 sinon, 
