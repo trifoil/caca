@@ -20,7 +20,7 @@ $sheetDataLower = $sheetData | ForEach-Object {
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
 
-$outputFilePath = "C:\path\to\output.csv"
+$outputFilePath = "output.csv"
 
 # Save the modified sheet to a CSV file
 $sheetDataLower | Export-Csv -Path $outputFilePath -NoTypeInformation
