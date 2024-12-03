@@ -15,14 +15,14 @@ function Remove-Diacritics {
     param (
         [string]$inputString
     )
-    $normalizedString = $inputString.Normalize([System.Text.NormalizationForm]::FormD)
+    $normalizedString = $inputString.Normalize( [System.Text.NormalizationForm]::FormD )
     $stringBuilder = New-Object System.Text.StringBuilder
     $normalizedString.ToCharArray() | ForEach-Object {
-        if ([System.Globalization.CharUnicodeInfo]::GetUnicodeCategory($_) -ne [System.Globalization.UnicodeCategory]::NonSpacingMark) {
+        if ( [System.Globalization.CharUnicodeInfo]::GetUnicodeCategory($_) -ne [System.Globalization.UnicodeCategory]::NonSpacingMark ) {
             $null = $stringBuilder.Append($_)
         }
     }
-    return $stringBuilder.ToString().Normalize([System.Text.NormalizationForm]::FormC)
+    return $stringBuilder.ToString().Normalize( [System.Text.NormalizationForm]::FormC )
 }
 
 # Convert all letters to lowercase and remove diacritics
@@ -33,18 +33,8 @@ $sheetDataLower = $sheetData | ForEach-Object {
     $_
 }
 
-# Add a new column named "test" between the 4th and 5th columns
-$sheetDataLower = $sheetDataLower | ForEach-Object {
-    $row = $_
-    $newRow = New-Object PSObject
-    for ($i = 0; $i -lt $row.PSObject.Properties.Count; $i++) {
-        if ([int]$i -eq 3) {
-            $newRow | Add-Member -MemberType NoteProperty -Name "test" -Value ""
-        }
-        $newRow | Add-Member -MemberType NoteProperty -Name $row.PSObject.Properties[$i].Name -Value $row.PSObject.Properties[$i].Value
-    }
-    $newRow
-}
+# Append a new column named "test" and fill it with "a"
+$sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={"a"}}
 
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
