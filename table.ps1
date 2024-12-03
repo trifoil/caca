@@ -2,7 +2,7 @@
 Import-Module -Name ImportExcel
 
 # Load the Excel file
-$excelFilePath = "Employes.xlsx" # Replace with the path to your file
+$excelFilePath = "path_to_your_Employes.xlsx" # Replace with the path to your file
 $data = Import-Excel -Path $excelFilePath
 
 # Convert all columns to lowercase and remove leading/trailing spaces
@@ -59,8 +59,22 @@ $cleanedData | ForEach-Object {
     }
 }
 
+# Store the cleaned table in memory as a 2D array
+$tableInMemory = @()
+foreach ($row in $cleanedData) {
+    $rowArray = @()
+    foreach ($key in $row.PSObject.Properties.Name) {
+        $rowArray += $row.$key
+    }
+    $tableInMemory += ,@($rowArray)
+}
+
 # Export the modified data back to an Excel file
 $exportPath = "path_to_cleaned_Employes.xlsx" # Replace with your desired output file path
 $cleanedData | Export-Excel -Path $exportPath -WorksheetName "CleanedData"
 
 Write-Host "Processing complete. Cleaned data exported to $exportPath."
+
+# Optional: Display the 2D array in memory for verification
+Write-Host "The table is stored in memory as a 2D array:"
+$tableInMemory | ForEach-Object { Write-Host ($_.ToString() -join ", ") }
