@@ -44,17 +44,6 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $newRow
 }
 
-# Change the column title "n° interne" to "interne"
-$sheetDataLower = $sheetDataLower | ForEach-Object {
-    $row = $_
-    $newRow = New-Object PSObject
-    $row.PSObject.Properties | ForEach-Object {
-        $columnName = if ($_.Name -eq "n° interne") { "interne" } else { $_.Name }
-        $newRow | Add-Member -MemberType NoteProperty -Name $columnName -Value $_.Value
-    }
-    $newRow
-}
-
 # Append a new column named "test" and copy the contents of the "departement" column into it
 $sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={$_.departement}}
 
@@ -76,6 +65,17 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
         $_.Value = $_.Value -replace ' ', '' -replace "'", ''
     }
     $_
+}
+
+# Change the column title that contains "interne" to "interne"
+$sheetDataLower = $sheetDataLower | ForEach-Object {
+    $row = $_
+    $newRow = New-Object PSObject
+    $row.PSObject.Properties | ForEach-Object {
+        $columnName = if ($_.Name -match "interne") { "interne" } else { $_.Name }
+        $newRow | Add-Member -MemberType NoteProperty -Name $columnName -Value $_.Value
+    }
+    $newRow
 }
 
 # Display the modified sheet in the console
