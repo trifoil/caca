@@ -44,8 +44,8 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $newRow
 }
 
-# Append a new column named "test" and fill it with "a"
-$sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={"a"}}
+# Append a new column named "test" and copy the contents of the "departement" column into it
+$sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={$_.departement}}
 
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
