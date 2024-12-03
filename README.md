@@ -20,3 +20,8 @@ GC global catalog : annuaire qui reprend tous les objets de l'AD,
 
 
 pour le sprint review, présentation de manière positive et préparée. Chaque personne doit interagir
+
+si commun (general), tt le monde a acces en lecture mais l'utilisateur ne peut pas créer dans le dossier
+
+premier sprint review : jeudi matin 11h
+
