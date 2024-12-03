@@ -33,11 +33,19 @@ $sheetDataLower = $sheetData | ForEach-Object {
     $_
 }
 
+# Convert column names to lowercase and remove diacritics
+$sheetDataLower = $sheetDataLower | ForEach-Object {
+    $row = $_
+    $newRow = New-Object PSObject
+    $row.PSObject.Properties | ForEach-Object {
+        $columnName = (Remove-Diacritics -inputString $_.Name).ToLower()
+        $newRow | Add-Member -MemberType NoteProperty -Name $columnName -Value $_.Value
+    }
+    $newRow
+}
+
 # Append a new column named "test" and fill it with "a"
 $sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={"a"}}
-
-# Replace the first line of the last column with the value of the first line, 4th column
-$sheetDataLower[0].test = $sheetDataLower[0].PSObject.Properties[3].Value
 
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
