@@ -59,10 +59,10 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $_
 }
 
-# Remove all spaces and single quotes in all cells
+# Remove all spaces, single quotes, "&", and "-" characters in all cells
 $sheetDataLower = $sheetDataLower | ForEach-Object {
     $_.PSObject.Properties | ForEach-Object {
-        $_.Value = $_.Value -replace ' ', '' -replace "'", ''
+        $_.Value = $_.Value -replace ' ', '' -replace "'", '' -replace '&', '' -replace '-', ''
     }
     $_
 }
