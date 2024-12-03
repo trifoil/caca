@@ -7,6 +7,8 @@ initialduprenom.initialnom
 
 concaténer les noms composés
 
+si doublon, demander à l'utilisateur
+
 quotas : limites hard
 
 on ne renomme pas le site par défaut, on en crée d'autres
