@@ -33,6 +33,17 @@ $sheetDataLower = $sheetData | ForEach-Object {
     $_
 }
 
+# Add a fifth column after the fourth column
+$sheetDataLower = $sheetDataLower | ForEach-Object {
+    $fourthColumnValue = $_.PSObject.Properties[3].Value
+    $splitValues = $fourthColumnValue -split '/'
+    if ($splitValues.Count -eq 2) {
+        $_.PSObject.Properties[3].Value = $splitValues[0]
+        $_ | Add-Member -MemberType NoteProperty -Name "NewColumn" -Value $splitValues[1]
+    }
+    $_
+}
+
 # Display the modified sheet in the console
 $sheetDataLower | Format-Table -AutoSize
 
