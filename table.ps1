@@ -78,15 +78,15 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $newRow
 }
 
-# Add a new column called "nomprenomcat"
+# Add a new column called "upn"
 $sheetDataLower = $sheetDataLower | ForEach-Object {
     $nom = $_.nom
     $prenom = $_.prenom
-    $nomprenomcat = "$prenom.$nom"
-    if ($nomprenomcat.Length -gt 20) {
-        $nomprenomcat = "$($prenom[0]).$nom"
+    $upn = "$prenom.$nom"
+    if ($upn.Length -gt 20) {
+        $upn = "$($prenom[0]).$nom"
     }
-    $_ | Add-Member -MemberType NoteProperty -Name "nomprenomcat" -Value $nomprenomcat
+    $_ | Add-Member -MemberType NoteProperty -Name "upn" -Value $upn
     $_
 }
 
