@@ -94,6 +94,8 @@ function Gestion_Users {
         $interne = $line.interne
         $ou = $line.ou
         $sousou = $line.departement
+        $gg_name = "GG_${ou}"
+        $gg_ou_path = "OU=Groupes,OU=gg,DC=belgique,DC=lan"
         $pwd = Generate-RandomPassword
 
         $ou_path = "OU=$sousou,OU=$ou,DC=belgique,DC=lan"
@@ -120,8 +122,15 @@ function Gestion_Users {
         try {
             New-ADUser -Name $nom -GivenName $prenom -UserPrincipalName $logon_name -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $ou_path -SamAccountName $nom
             Write-Output "Utilisateur $nom créé"
-        }
-        catch {
+            $group = Get-ADGroup -Filter {Name -eq $gg_name} -SearchBase $gg_ou_path -ErrorAction SilentlyContinue
+            if ($group) {
+                # Ajouter l'utilisateur au groupe global
+                Add-ADGroupMember -Identity $group -Members $user
+                Write-Output "Utilisateur $logon_name ajouté au groupe $gg_name"
+            } catch {
+                Write-Output "Erreur : Le groupe $gg_name n'existe pas"
+            }
+        } catch {
             Write-Output "Erreur lors de la création de l'utilisateur $nom : $_"
         }
 
