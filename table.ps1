@@ -44,8 +44,8 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $newRow
 }
 
-# Append a new column named "test" and copy the contents of the "departement" column into it
-$sheetDataLower = $sheetDataLower | Select-Object *, @{Name="test";Expression={$_.departement}}
+# Append a new column named "ou" and copy the contents of the "departement" column into it
+$sheetDataLower = $sheetDataLower | Select-Object *, @{Name="ou";Expression={$_.departement}}
 
 # Remove characters after the "/" character, including the "/" itself, from the "departement" column
 $sheetDataLower = $sheetDataLower | ForEach-Object {
@@ -53,9 +53,9 @@ $sheetDataLower = $sheetDataLower | ForEach-Object {
     $_
 }
 
-# Remove characters before the "/" character, including the "/" itself, from the "test" column
+# Remove characters before the "/" character, including the "/" itself, from the "ou" column
 $sheetDataLower = $sheetDataLower | ForEach-Object {
-    $_.test = $_.test -replace '^[^/]*/', ''
+    $_.ou = $_.ou -replace '^[^/]*/', ''
     $_
 }
 
