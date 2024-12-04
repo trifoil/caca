@@ -17,7 +17,7 @@ $randomPassword = Generate-RandomPassword
 Write-Output "Mot de passe généré : $randomPassword"
 
 # Création des OU 
-$csv = Import-Csv -Path "C:\FUCKONEDRIVE\ProjetWinServ\SCRIPT\output.csv"
+$csv = Import-Csv -Path "output.csv"
 foreach ($line in $csv) {
     $ou = $line.ou
     $ou_path = "OU=$ou,DC=belgique,DC=lan"
@@ -32,7 +32,7 @@ foreach ($line in $csv) {
 }
 
 # Création des sous OU => récuperer depuis le CSV
-$csv = Import-Csv -Path "C:\FUCKONEDRIVE\ProjetWinServ\SCRIPT\output.csv"
+$csv = Import-Csv -Path "output.csv"
 foreach ($line in $csv) {
     $ou = $line.ou
     $sousou = $line.departement
