@@ -1,8 +1,3 @@
-# Création d'un script permettant de créer des USERS sur l'AD
-# 1. Création des Groupes Globaux
-# 2. Création des Groupes Locaux
-# 3. Ajouts des utilisateurs du fichier CSV dans les Groupes Globaux
-
 # Génération des mdp
 function Generate-RandomPassword {
     param (
@@ -16,53 +11,60 @@ function Generate-RandomPassword {
 $randomPassword = Generate-RandomPassword
 Write-Output "Mot de passe généré : $randomPassword"
 
-# Création des OU 
+# Création des OU
 $csv = Import-Csv -Path "output.csv"
 foreach ($line in $csv) {
     $ou = $line.ou
     $ou_path = "OU=$ou,DC=belgique,DC=lan"
 
-    #Check si l'OU existe déjà
-    if (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase $ou_path) {
+    # Check si l'OU existe déjà
+    if (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
         Write-Output "L'OU $ou existe déjà"
     } else {
-        New-ADOrganizationalUnit -Name $ou -Path $ou_path
+        New-ADOrganizationalUnit -Name $ou -Path "DC=belgique,DC=lan"
+        Write-Output "L'OU $ou a été créée"
     }
 }
 
 # Création des sous OU => récuperer depuis le CSV
-$csv = Import-Csv -Path "output.csv"
 foreach ($line in $csv) {
     $ou = $line.ou
     $sousou = $line.departement
+    $sousou_path = "OU=$sousou,OU=$ou,DC=belgique,DC=lan"
 
-    #Check si le SOUS-OU existe déjà
-    if (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan") {
+    # Check si le SOUS-OU existe déjà
+    if (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
         Write-Output "Le SOUS-OU $sousou existe déjà"
     } else {
         New-ADOrganizationalUnit -Name $sousou -Path "OU=$ou,DC=belgique,DC=lan"
+        Write-Output "Le SOUS-OU $sousou a été créée"
     }
 }
 
 # Création des Users et ajout dans les OU & SOUS-OU
-$csv = Import-Csv -Path "output.csv"
 foreach ($line in $csv) {
-    #Récupération des valeurs du CSV
+    # Récupération des valeurs du CSV
     $nom = $line.nom
     $prenom = $line.prenom
     $description = $line.description
     $bureau = $line.bureau
-    $interne = $line.interne 
+    $interne = $line.interne
     $ou = $line.departement
     $pwd = $randomPassword
 
-    #Création de l'utilisateur
+    # Vérification de l'existence de l'OU et de la sous-OU
+    $ou_path = "OU=$ou,DC=belgique,DC=lan"
+    if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
+        Write-Output "Erreur : L'OU $ou n'existe pas"
+        continue
+    }
+
+    # Création de l'utilisateur
     try {
-        New-ADUser -Name $nom -GivenName $prenom -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path "OU=$ou,DC=belgique,DC=lan" -SamAccountName $nom 
+        New-ADUser -Name $nom -GivenName $prenom -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $ou_path -SamAccountName $nom
         Write-Output "Utilisateur $nom créé"
     }
-    # Gestion des erreurs
     catch {
-        Write-Output "Erreur lors de la création de l'utilisateur $nom"
+        Write-Output "Erreur lors de la création de l'utilisateur $nom : $_"
     }
 }
