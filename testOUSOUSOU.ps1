@@ -1,7 +1,7 @@
 # Génération des mdp
 function Generate-RandomPassword {
     param (
-        [int]$length = 12
+        [int]$length = 7
     )
 
     $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=<>?"
@@ -9,51 +9,63 @@ function Generate-RandomPassword {
     return $password
 }
 
+$randomPassword = Generate-RandomPassword
+Write-Output "Mot de passe généré : $randomPassword"
+
 # Importation du fichier CSV
 $csv = Import-Csv -Path "output.csv"
 
-# Fonction pour créer les OU et sous-OU
-function Gestion_OU_SousOU {
+# Fonction pour créer les OU
+function Gestion_OU {
     foreach ($line in $csv) {
         $ou = $line.ou
-        $sousou = $line.departement
 
         # Check si l'OU existe déjà
-        if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
+        if (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
+            Write-Output "L'OU $ou existe déjà"
+        } else {
             New-ADOrganizationalUnit -Name $ou -Path "DC=belgique,DC=lan"
             Write-Output "L'OU $ou a été créée"
-        } else {
-            Write-Output "L'OU $ou existe déjà"
-        }
-
-        # Check si le SOUS-OU existe déjà
-        if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
-            New-ADOrganizationalUnit -Name $sousou -Path "OU=$ou,DC=belgique,DC=lan"
-            Write-Output "Le SOUS-OU $sousou a été créée"
-        } else {
-            Write-Output "Le SOUS-OU $sousou existe déjà"
         }
     }
 }
 
-# Fonction pour créer les groupes globaux
+# Création des sous OU => récuperer depuis le CSV
+function Gestion_SousOU {
+    foreach ($line in $csv) {
+        $ou = $line.ou
+        $sousou = $line.departement
+
+        # Check si le SOUS-OU existe déjà
+        if (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
+            Write-Output "Le SOUS-OU $sousou existe déjà"
+        } else {
+            New-ADOrganizationalUnit -Name $sousou -Path "OU=$ou,DC=belgique,DC=lan"
+            Write-Output "Le SOUS-OU $sousou a été créée"
+        }
+    }
+}
+
 function Gestion_GG {
-    $gg_ou_path = "OU=gg,OU=Groupes,DC=belgique,DC=lan"
+    # Créer un OU "Groupes" pour placer les groupes globaux à l'intérieur
 
     # Check si l'OU "Groupes" existe déjà
-    if (-not (Get-ADOrganizationalUnit -Filter {Name -eq "Groupes"} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
+    if (Get-ADOrganizationalUnit -Filter {Name -eq "Groupes"} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
+        Write-Output "L'OU 'Groupes' existe déjà"
+    } else {
         New-ADOrganizationalUnit -Name "Groupes" -Path "DC=belgique,DC=lan"
         Write-Output "L'OU 'Groupes' a été créée"
-    } else {
-        Write-Output "L'OU 'Groupes' existe déjà"
     }
 
+    # Créer un groupe global
+    $gg_ou_path = "OU=gg,OU=Groupes,DC=belgique,DC=lan"
+
     # Check si l'OU "gg" existe déjà
-    if (-not (Get-ADOrganizationalUnit -Filter {Name -eq "gg"} -SearchBase "OU=Groupes,DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
+    if (Get-ADOrganizationalUnit -Filter {Name -eq "gg"} -SearchBase "OU=Groupes,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
+        Write-Output "L'OU 'gg' existe déjà"
+    } else {
         New-ADOrganizationalUnit -Name "gg" -Path "OU=Groupes,DC=belgique,DC=lan"
         Write-Output "L'OU 'gg' a été créée"
-    } else {
-        Write-Output "L'OU 'gg' existe déjà"
     }
 
     # Ajouter les GG pour chaque OU
@@ -62,11 +74,11 @@ function Gestion_GG {
         $gg_name = "GG_${ou}"
 
         # Check si le GG existe déjà
-        if (-not (Get-ADGroup -Filter {Name -eq $gg_name} -SearchBase $gg_ou_path -ErrorAction SilentlyContinue)) {
+        if (Get-ADGroup -Filter {Name -eq $gg_name} -SearchBase $gg_ou_path -ErrorAction SilentlyContinue) {
+            Write-Output "Le GG $gg_name existe déjà"
+        } else {
             New-ADGroup -Name $gg_name -GroupScope Global -Path $gg_ou_path
             Write-Output "Le GG $gg_name a été créé"
-        } else {
-            Write-Output "Le GG $gg_name existe déjà"
         }
     }
 }
@@ -82,14 +94,21 @@ function Gestion_Users {
         $description = $line.description
         $bureau = $line.bureau
         $interne = $line.interne
-        $ou = $line.departement
-        $pwd = Generate-RandomPassword
+        $ou = $line.ou
+        $sousou = $line.departement
+        $pwd = $randomPassword
 
-        $ou_path = "OU=$ou,DC=belgique,DC=lan"
+        $ou_path = "OU=$ou,OU=$sousou,DC=belgique,DC=lan"
 
         # Check si l'OU existe
         if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
             Write-Output "Erreur : L'OU $ou n'existe pas"
+            continue
+        }
+
+        # Check si le SOUS-OU existe
+        if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
+            Write-Output "Erreur : Le SOUS-OU $sousou n'existe pas"
             continue
         }
 
@@ -122,6 +141,7 @@ function Gestion_Users {
 }
 
 # Appel des fonctions
-Gestion_OU_SousOU
+Gestion_OU
+Gestion_SousOU
 Gestion_GG
 Gestion_Users
