@@ -44,3 +44,33 @@ foreach ($line in $csv) {
     }
 }
 
+# Création des Users et ajout dans les OU & SOUS-OU
+$csv = Import-Csv -Path "output.csv"
+foreach ($line in $csv) {
+    #Récupération des valeurs du CSV
+    $nom = $line.nom
+    $prenom = $line.prenom
+    $description = $line.description
+    $bureau = $line.bureau
+    $interne = $line.interne 
+    $ou = $line.departement
+
+    #Création de l'utilisateur
+    try {
+        New-ADUser 
+        -Name $nom 
+        -GivenName $prenom 
+        -Description $description 
+        -Office $bureau 
+        -AccountPassword (ConvertTo-SecureString $randomPassword -AsPlainText -Force) 
+        -Enabled $true 
+        -Path "OU=$ou,DC=belgique,DC=lan" 
+        -SamAccountName $nom 
+        -UserPrincipalName
+        Write-Output "Utilisateur $nom créé"
+    }
+    # Gestion des erreurs
+    catch {
+        Write-Output "Erreur lors de la création de l'utilisateur $nom"
+    }
+}
