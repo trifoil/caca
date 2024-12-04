@@ -54,19 +54,11 @@ foreach ($line in $csv) {
     $bureau = $line.bureau
     $interne = $line.interne 
     $ou = $line.departement
+    $pwd = $randomPassword
 
     #Création de l'utilisateur
     try {
-        New-ADUser 
-        -Name $nom 
-        -GivenName $prenom 
-        -Description $description 
-        -Office $bureau 
-        -AccountPassword (ConvertTo-SecureString $randomPassword -AsPlainText -Force) 
-        -Enabled $true 
-        -Path "OU=$ou,DC=belgique,DC=lan" 
-        -SamAccountName $nom 
-        -UserPrincipalName
+        New-ADUser -Name $nom -GivenName $prenom -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path "OU=$ou,DC=belgique,DC=lan" -SamAccountName $nom 
         Write-Output "Utilisateur $nom créé"
     }
     # Gestion des erreurs
