@@ -8,6 +8,7 @@ function Generate-RandomPassword {
     $password = -join ((1..$length) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
     return $password
 }
+
 $randomPassword = Generate-RandomPassword
 Write-Output "Mot de passe généré : $randomPassword"
 
@@ -61,10 +62,10 @@ function Gestion_GL{
     # Check si le groupe global existe déjà
     $gg = "gg"
 
-    if (Get-ADGroup -Filter {Name -eq $gg} -SearchBase "OU=Groupes,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
+    if (Get-ADOrganizationalUnit -Filter {Name -eq $gg} -SearchBase "OU=Groupes,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
         Write-Output "L'OU GG existe déjà"
     } else {
-        New-ADGroup -Name $gg -GroupScope Global -Path "OU=Groupes,DC=belgique,DC=lan"
+        New-ADOrganizationalUnit -Name $gg -GroupScope Global -Path "OU=Groupes,DC=belgique,DC=lan"
         Write-Output "L'OU GG global a été créé"
     }
 
@@ -106,6 +107,12 @@ function Gestion_Users{
             Write-Output "Erreur : L'OU $ou n'existe pas"
             continue
         }
+
+        # Check si l'utilisateur existe déjà
+        if (Get-ADUser -Filter {UserPrincipalName -eq $logon_name} -ErrorAction SilentlyContinue) {
+            Write-Output "L'utilisateur $nom existe déjà"
+            continue
+        }
     
         # Création de l'utilisateur
         try {
@@ -128,7 +135,6 @@ function Gestion_Users{
         $user_info | Export-Csv -Path $output_user_file_path -Append -NoTypeInformation -Encoding UTF8
     
     }
-    
 }
 
 # Appel des fonctions
