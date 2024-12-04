@@ -95,7 +95,7 @@ function Gestion_Users {
         $ou = $line.ou
         $sousou = $line.departement
         $gg_name = "GG_${ou}"
-        $gg_ou_path = "OU=Groupes,OU=gg,DC=belgique,DC=lan"
+        $gg_ou_path = "OU=gg,OU=Groupes,DC=belgique,DC=lan"
         $pwd = Generate-RandomPassword
 
         $ou_path = "OU=$sousou,OU=$ou,DC=belgique,DC=lan"
@@ -122,13 +122,21 @@ function Gestion_Users {
         try {
             New-ADUser -Name $nom -GivenName $prenom -UserPrincipalName $logon_name -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $ou_path -SamAccountName $nom
             Write-Output "Utilisateur $nom créé"
-            $group = Get-ADGroup -Filter {Name -eq $gg_name} -SearchBase $gg_ou_path -ErrorAction SilentlyContinue
-            if ($group) {
-                # Ajouter l'utilisateur au groupe global
-                Add-ADGroupMember -Identity $group -Members $user
-                Write-Output "Utilisateur $logon_name ajouté au groupe $gg_name"
-            } catch {
-                Write-Output "Erreur : Le groupe $gg_name n'existe pas"
+
+            # Récupérer l'utilisateur créé
+            $user = Get-ADUser -Filter {UserPrincipalName -eq $logon_name} -ErrorAction SilentlyContinue
+
+            if ($user) {
+                # Vérifier et ajouter au groupe global
+                $group = Get-ADGroup -Filter {Name -eq $gg_name} -SearchBase $gg_ou_path -ErrorAction SilentlyContinue
+                if ($group) {
+                    Add-ADGroupMember -Identity $gg_name -Members $user.SamAccountName
+                    Write-Output "Utilisateur $logon_name ajouté au groupe $gg_name"
+                } else {
+                    Write-Output "Erreur : Le groupe $gg_name n'existe pas"
+                }
+            } else {
+                Write-Output "Erreur : Impossible de récupérer l'utilisateur $logon_name"
             }
         } catch {
             Write-Output "Erreur lors de la création de l'utilisateur $nom : $_"
@@ -146,6 +154,7 @@ function Gestion_Users {
         $user_info | Export-Csv -Path $output_user_file_path -Append -NoTypeInformation -Encoding UTF8
     }
 }
+
 
 # Appel des fonctions
 Gestion_OU
