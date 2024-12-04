@@ -8,9 +8,7 @@ function Generate-RandomPassword {
     $password = -join ((1..$length) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
     return $password
 }
-
 $randomPassword = Generate-RandomPassword
-Write-Output "Mot de passe généré : $randomPassword"
 
 # Importation du fichier CSV
 $csv = Import-Csv -Path "output.csv"
@@ -96,9 +94,9 @@ function Gestion_Users {
         $interne = $line.interne
         $ou = $line.ou
         $sousou = $line.departement
-        $pwd = $randomPassword
+        $pwd = Generate-RandomPassword
 
-        $ou_path = "OU=$ou,OU=$sousou,DC=belgique,DC=lan"
+        $ou_path = "OU=$sousou,OU=$ou,DC=belgique,DC=lan"
 
         # Check si l'OU existe
         if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
@@ -122,11 +120,6 @@ function Gestion_Users {
         try {
             New-ADUser -Name $nom -GivenName $prenom -UserPrincipalName $logon_name -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $ou_path -SamAccountName $nom
             Write-Output "Utilisateur $nom créé"
-
-            # Ajouter l'utilisateur à son groupe global
-            $gg_name = "GG_${ou}"
-            Add-ADGroupMember -Identity $gg_name -Members $nom
-            Write-Output "Utilisateur $nom ajouté au groupe $gg_name"
         }
         catch {
             Write-Output "Erreur lors de la création de l'utilisateur $nom : $_"
@@ -137,7 +130,7 @@ function Gestion_Users {
 
         $user_info = [PSCustomObject]@{
             Nom         = $nom
-            Departement = $ou
+            Departement = $sousou
             MotDePasse  = $pwd
         }
 
