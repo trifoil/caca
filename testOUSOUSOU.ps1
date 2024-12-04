@@ -12,45 +12,47 @@ function Generate-RandomPassword {
 $randomPassword = Generate-RandomPassword
 Write-Output "Mot de passe généré : $randomPassword"
 
-# Création des OU
+# Importation du fichier CSV
 $csv = Import-Csv -Path "output.csv"
 
 # Fonction pour créer les OU
-function Gestion_OU{
+function Gestion_OU {
     foreach ($line in $csv) {
         $ou = $line.ou
         $ou_path = "OU=$ou,DC=belgique,DC=lan"
-    
+
         # Check si l'OU existe déjà
-        if (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase $ou_path -ErrorAction SilentlyContinue) {
+        if (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
             Write-Output "L'OU $ou existe déjà"
         } else {
-            New-ADOrganizationalUnit -Name $ou -Path $ou_path
+            New-ADOrganizationalUnit -Name $ou -Path "DC=belgique,DC=lan"
             Write-Output "L'OU $ou a été créée"
         }
     }
 }
 
 # Création des sous OU => récuperer depuis le CSV
-function Gestion_SousOU{
+function Gestion_SousOU {
     foreach ($line in $csv) {
         $ou = $line.ou
         $sousou = $line.departement
         $sousou_path = "OU=$sousou,OU=$ou,DC=belgique,DC=lan"
-    
+
         # Check si le SOUS-OU existe déjà
-        if (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase $sousou_path -ErrorAction SilentlyContinue) {
+        if (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
             Write-Output "Le SOUS-OU $sousou existe déjà"
         } else {
-            New-ADOrganizationalUnit -Name $sousou -Path $sousou_path
+            New-ADOrganizationalUnit -Name $sousou -Path "OU=$ou,DC=belgique,DC=lan"
             Write-Output "Le SOUS-OU $sousou a été créée"
         }
     }
 }
 
-function Gestion_GL{
-    # Créer un OU "groupe" pour placer les groupes globaux à l'intérieur
-    # Check si l'OU "groupe" existe déjà
+function Gestion_GL {
+    # Créer un OU "Groupes" pour placer les groupes globaux à l'intérieur
+    $groupes_ou_path = "OU=Groupes,DC=belgique,DC=lan"
+
+    # Check si l'OU "Groupes" existe déjà
     if (Get-ADOrganizationalUnit -Filter {Name -eq "Groupes"} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
         Write-Output "L'OU 'Groupes' existe déjà"
     } else {
@@ -59,35 +61,33 @@ function Gestion_GL{
     }
 
     # Créer un groupe global
-    # Check si le groupe global existe déjà
-    $gg = "gg"
+    $gg_ou_path = "OU=gg,OU=Groupes,DC=belgique,DC=lan"
 
-    if (Get-ADOrganizationalUnit -Filter {Name -eq $gg} -SearchBase "OU=Groupes,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
-        Write-Output "L'OU GG existe déjà"
+    # Check si l'OU "gg" existe déjà
+    if (Get-ADOrganizationalUnit -Filter {Name -eq "gg"} -SearchBase "OU=Groupes,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
+        Write-Output "L'OU 'gg' existe déjà"
     } else {
-        New-ADOrganizationalUnit -Name $gg -GroupScope Global -Path "OU=Groupes,DC=belgique,DC=lan"
-        Write-Output "L'OU GG global a été créé"
+        New-ADOrganizationalUnit -Name "gg" -Path "OU=Groupes,DC=belgique,DC=lan"
+        Write-Output "L'OU 'gg' a été créée"
     }
 
     # Ajouter les GG pour chaque OU
     foreach ($line in $csv) {
         $ou = $line.ou
         $gg_name = "GG_${ou}"
-        $gg_path = "OU=Groupes,OU=gg,DC=belgique,DC=lan"
 
         # Check si le GG existe déjà
-        if (Get-ADGroup -Filter {Name -eq $gg_name} -SearchBase $gg_path -ErrorAction SilentlyContinue) {
+        if (Get-ADGroup -Filter {Name -eq $gg_name} -SearchBase $gg_ou_path -ErrorAction SilentlyContinue) {
             Write-Output "Le GG $gg_name existe déjà"
         } else {
-            New-ADGroup -Name $gg_name -GroupScope Global -Path $gg_path
+            New-ADGroup -Name $gg_name -GroupScope Global -Path $gg_ou_path
             Write-Output "Le GG $gg_name a été créé"
         }
     }
 }
 
-
 # Création des Users et ajout dans les OU & SOUS-OU
-function Gestion_Users{
+function Gestion_Users {
     foreach ($line in $csv) {
         # Récupération des valeurs du CSV
         $nom = $line.nom
@@ -99,9 +99,9 @@ function Gestion_Users{
         $interne = $line.interne
         $ou = $line.departement
         $pwd = $randomPassword
-    
+
         $ou_path = "OU=$ou,DC=belgique,DC=lan"
-        
+
         # Check si l'OU existe
         if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
             Write-Output "Erreur : L'OU $ou n'existe pas"
@@ -113,7 +113,7 @@ function Gestion_Users{
             Write-Output "L'utilisateur $nom existe déjà"
             continue
         }
-    
+
         # Création de l'utilisateur
         try {
             New-ADUser -Name $nom -GivenName $prenom -UserPrincipalName $logon_name -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $ou_path -SamAccountName $nom
@@ -122,18 +122,17 @@ function Gestion_Users{
         catch {
             Write-Output "Erreur lors de la création de l'utilisateur $nom : $_"
         }
-    
+
         # Exporter User + Departement + MDP dans un fichier CSV pour debug
         $output_user_file_path = "output_user.csv"
-    
+
         $user_info = [PSCustomObject]@{
             Nom         = $nom
             Departement = $ou
             MotDePasse  = $pwd
         }
-    
+
         $user_info | Export-Csv -Path $output_user_file_path -Append -NoTypeInformation -Encoding UTF8
-    
     }
 }
 
