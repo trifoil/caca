@@ -19,7 +19,6 @@ $csv = Import-Csv -Path "output.csv"
 function Gestion_OU {
     foreach ($line in $csv) {
         $ou = $line.ou
-        $ou_path = "OU=$ou,DC=belgique,DC=lan"
 
         # Check si l'OU existe déjà
         if (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
@@ -36,7 +35,6 @@ function Gestion_SousOU {
     foreach ($line in $csv) {
         $ou = $line.ou
         $sousou = $line.departement
-        $sousou_path = "OU=$sousou,OU=$ou,DC=belgique,DC=lan"
 
         # Check si le SOUS-OU existe déjà
         if (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
@@ -48,9 +46,8 @@ function Gestion_SousOU {
     }
 }
 
-function Gestion_GL {
+function Gestion_GG {
     # Créer un OU "Groupes" pour placer les groupes globaux à l'intérieur
-    $groupes_ou_path = "OU=Groupes,DC=belgique,DC=lan"
 
     # Check si l'OU "Groupes" existe déjà
     if (Get-ADOrganizationalUnit -Filter {Name -eq "Groupes"} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue) {
@@ -139,5 +136,5 @@ function Gestion_Users {
 # Appel des fonctions
 Gestion_OU
 Gestion_SousOU
-Gestion_GL
+Gestion_GG
 Gestion_Users
