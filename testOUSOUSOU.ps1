@@ -1,13 +1,14 @@
 # Génération des mdp
 function Generate-RandomPassword {
     param (
-        [int]$length = 12
+        [int]$length = 7
     )
 
     $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=<>?"
     $password = -join ((1..$length) | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
     return $password
 }
+$randomPassword = Generate-RandomPassword
 
 # Importation du fichier CSV
 $csv = Import-Csv -Path "output.csv"
