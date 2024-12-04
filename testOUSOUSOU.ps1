@@ -49,19 +49,27 @@ foreach ($line in $csv) {
     $description = $line.description
     $bureau = $line.bureau
     $interne = $line.interne
-    $ou = $line.departement
+    $ou = $line.ou
+    $sousou = $line.departement
     $pwd = $randomPassword
 
     # Vérification de l'existence de l'OU et de la sous-OU
     $ou_path = "OU=$ou,DC=belgique,DC=lan"
+    $sousou_path = "OU=$sousou,OU=$ou,DC=belgique,DC=lan"
+
     if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
         Write-Output "Erreur : L'OU $ou n'existe pas"
         continue
     }
 
+    if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
+        Write-Output "Erreur : Le SOUS-OU $sousou n'existe pas sous l'OU $ou"
+        continue
+    }
+
     # Création de l'utilisateur
     try {
-        New-ADUser -Name $nom -GivenName $prenom -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $ou_path -SamAccountName $nom
+        New-ADUser -Name $nom -GivenName $prenom -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $sousou_path -SamAccountName $nom
         Write-Output "Utilisateur $nom créé"
     }
     catch {
