@@ -41,3 +41,17 @@ premier sprint review : jeudi matin 11h
   * IPv4/Mask :
   * Passerelle :
   * DNS :
+ 
+
+
+
+
+
+
+utilisateurs
+
+utilisateurs dans dans les gg
+
+creer les gl mais pas mettre les gg dans les gl 
+
+mettre les gg dans les gl c'est manuel
