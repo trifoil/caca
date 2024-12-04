@@ -21,13 +21,12 @@ $csv = Import-Csv -Path "output.csv"
 foreach ($line in $csv) {
     $ou = $line.ou
     $ou_path = "OU=$ou,DC=belgique,DC=lan"
-    New-ADOrganizationalUnit -Name $ou -Path $ou_path
 
     #Check si l'OU existe déjà
     if (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase $ou_path) {
         Write-Output "L'OU $ou existe déjà"
     } else {
-        Write-Output "L'OU $ou a été créé"
+        New-ADOrganizationalUnit -Name $ou -Path $ou_path
     }
 }
 
@@ -36,13 +35,12 @@ $csv = Import-Csv -Path "output.csv"
 foreach ($line in $csv) {
     $ou = $line.ou
     $sousou = $line.departement
-    New-ADOrganizationalUnit -Name $sousou -Path "OU=$ou,DC=belgique,DC=lan"
 
     #Check si le SOUS-OU existe déjà
     if (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan") {
         Write-Output "Le SOUS-OU $sousou existe déjà"
     } else {
-        Write-Output "Le SOUS-OU $sousou a été créé"
+        New-ADOrganizationalUnit -Name $sousou -Path "OU=$ou,DC=belgique,DC=lan"
     }
 }
 
