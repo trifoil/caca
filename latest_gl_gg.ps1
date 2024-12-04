@@ -112,7 +112,7 @@ function Gestion_GL {
         if (Get-ADGroup -Filter {Name -eq $gl_name} -SearchBase $gl_ou_path -ErrorAction SilentlyContinue) {
             Write-Output "Le GL $gl_name existe déjà"
         } else {
-            New-ADGroup -Name $gl_name -GroupScope Local -Path $gl_ou_path
+            New-ADGroup -Name $gl_name -GroupScope DomainLocal -Path $gl_ou_path
             Write-Output "Le GL $gl_name a été créé"
         }
     }
