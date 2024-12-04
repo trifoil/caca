@@ -13,6 +13,7 @@ Write-Output "Mot de passe généré : $randomPassword"
 
 # Création des OU
 $csv = Import-Csv -Path "output.csv"
+
 foreach ($line in $csv) {
     $ou = $line.ou
     $ou_path = "OU=$ou,DC=belgique,DC=lan"
@@ -49,30 +50,36 @@ foreach ($line in $csv) {
     $description = $line.description
     $bureau = $line.bureau
     $interne = $line.interne
-    $ou = $line.ou
-    $sousou = $line.departement
+    $ou = $line.departement
     $pwd = $randomPassword
 
     # Vérification de l'existence de l'OU et de la sous-OU
     $ou_path = "OU=$ou,DC=belgique,DC=lan"
-    $sousou_path = "OU=$sousou,OU=$ou,DC=belgique,DC=lan"
-
+    
+    # Check si l'OU existe
     if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $ou} -SearchBase "DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
         Write-Output "Erreur : L'OU $ou n'existe pas"
         continue
     }
 
-    if (-not (Get-ADOrganizationalUnit -Filter {Name -eq $sousou} -SearchBase "OU=$ou,DC=belgique,DC=lan" -ErrorAction SilentlyContinue)) {
-        Write-Output "Erreur : Le SOUS-OU $sousou n'existe pas sous l'OU $ou"
-        continue
-    }
-
     # Création de l'utilisateur
     try {
-        New-ADUser -Name $nom -GivenName $prenom -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $sousou_path -SamAccountName $nom
+        New-ADUser -Name $nom -GivenName $prenom -Description $description -Office $bureau -AccountPassword (ConvertTo-SecureString $pwd -AsPlainText -Force) -Enabled $true -Path $ou_path -SamAccountName $nom
         Write-Output "Utilisateur $nom créé"
     }
     catch {
         Write-Output "Erreur lors de la création de l'utilisateur $nom : $_"
     }
+
+    # Exporter User + Departement + MDP dans un fichier CSV pour debug
+    $output_user_file_path = "output_user.csv"
+
+    $user_info = [PSCustomObject]@{
+        Nom         = $nom
+        Departement = $ou
+        MotDePasse  = $pwd
+    }
+
+    $user_info | Export-Csv -Path $output_user_file_path -Append -NoTypeInformation -Encoding UTF8
+
 }
