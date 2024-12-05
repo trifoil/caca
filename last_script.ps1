@@ -1,6 +1,6 @@
 $baseOU = "DC=belgique,DC=lan"
 
-
+$csv = Import-Csv -Path "output.csv"
 
 
 # Fonction de génération de mots de passe
@@ -52,7 +52,12 @@ function Verif_OU {
             if ($nom_OU -ne "GG" -and $nom_OU -ne "GL") {
             New-ADGroup -GroupScope "Global" -Name "GG_$nom_OU" -Path "OU=GG,OU=Groups,$baseOU"
             New-ADGroup -GroupScope "DomainLocal" -Name "GL_R_$nom_OU" -Path "OU=GL,OU=Groups,$baseOU"
-            New-ADGroup -GroupScope "DomainLocal" -Name "GL_RW_$nom_OU" -Path "OU=GL,OU=Groups,$baseOU"}
+            New-ADGroup -GroupScope "DomainLocal" -Name "GL_RW_$nom_OU" -Path "OU=GL,OU=Groups,$baseOU"
+            
+            Add-ADGroupMember -Identity "GL_R_$nom_OU" -Members "GG_$nom_OU"
+            Add-ADGroupMember -Identity "GL_RW_$nom_OU" -Members "GG_$nom_OUt"
+
+            }
             
         }
     } catch {
@@ -66,6 +71,7 @@ Verif_OU -path_OU "OU=GL,OU=Groups,$baseOU"
 
 # Création des utilisateurs et ajout dans les OUs
 foreach ($line in $csv) {
+
     # Récupération des valeurs du CSV
     $nom = $line.nom
     $prenom = $line.prenom
